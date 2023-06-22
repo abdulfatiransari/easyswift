@@ -483,7 +483,7 @@ export default function Home() {
                 <td></td>
                 <td></td>
                 <td>
-                  <button type="button">Withdraw</button>
+                  <button type="button" onClick={withdraw}>Withdraw</button>
                 </td>
               </tr>
             </tbody>
