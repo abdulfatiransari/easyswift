@@ -85,7 +85,9 @@ export default function Home() {
   const ownerFees = async () => {
     const { web3, contract } = await initContract(ContractABI, contractAddress);
     const owner_fees = await contract.methods.ownerFee().call();
-    setOwnerFee(owner_fees);
+    const strtonum = Number(owner_fees);
+    console.log(strtonum)
+    setOwnerFee(strtonum);
   };
 
   const status = async () => {
@@ -208,7 +210,7 @@ export default function Home() {
         <div className="flex items-center bg-[#222] border border-[#080808] rounded-[4px] mb-[20px] min-h-[50px] justify-between px-[15px] py-[10px]">
           <div className="flex items-center gap-x-[5px]">
             <Image src={Logo} width={20} height={20} alt="" />
-            <p className="text-[#FFFFFF]">Remittance</p>
+            <p className="text-[#FFFFFF]">Easy Swift</p>
           </div>
           <div className="flex gap-x-1">
             <button
