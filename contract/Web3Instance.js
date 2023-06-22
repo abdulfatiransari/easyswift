@@ -15,7 +15,7 @@ export const getWeb3Instance = async (networkId) => {
   } else if (window.web3) {
     web3Provider = window.web3.currentProvider;
   } else {
-    const publicEndpoint = "https://sepolia.infura.io/v3/";
+    const publicEndpoint = "https://rpc-mumbai.maticvigil.com/";
     web3Provider = new Web3.providers.HttpProvider(publicEndpoint);
   }
 

@@ -38,8 +38,8 @@ export default function Home() {
   const [selected, setSelected] = useState();
   const [popup, setPopup] = useState(false);
 
-  const MAINNET_ID = 11155111;
-  const contractAddress = "0x65F7b35338c6D7771EBB69a0009335751b32fd59";
+  const MAINNET_ID = 80001;
+  const contractAddress = "0xd36A6E3Bf0095d9cad79daF2fF681c6Ca7e48Bc9";
 
   const initContract = async (
     contractAbi,
