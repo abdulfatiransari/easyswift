@@ -1,22 +1,26 @@
 "use client";
+import { getWeb3Instance } from "@/contract/Web3Instance";
 import { Inter } from "next/font/google";
 import Image from "next/image";
+import { useEffect, useState } from "react";
 import { BiMoney } from "react-icons/bi";
 import { CgProfile } from "react-icons/cg";
 import { FaLock } from "react-icons/fa";
 import { RxCross2 } from "react-icons/rx";
-import Logo from "../public/images/logo.jpg";
-import ContractHelper from "../contract/ContractHelper";
+import Web3 from "web3";
 import ContractABI from "../contract/ContractABI.json";
-import { useEffect, useState } from "react";
-import { getWeb3Instance } from "@/contract/Web3Instance";
-import Web3, { providers, utils } from "web3";
+import Logo from "../public/images/logo.jpg";
 
 const inter = Inter({ subsets: ["latin"] });
 
 export default function Home() {
   const [contractBalance, setContractBalance] = useState();
   const [ownerFee, setOwnerFee] = useState();
+  const [owner, setOwner] = useState();
+  const [deadline, setDeadline] = useState({
+    dead_line: "",
+    deadline_Limit: "",
+  });
   const [contractStatus, setContractStatus] = useState();
   const [wallet, setWallet] = useState("");
   const [count, setCount] = useState(0);
@@ -33,13 +37,14 @@ export default function Home() {
     pass1: "",
     pass2: "",
   });
+
   const [userDetails, setUserDetails] = useState([]);
   const [userWithdraw, setUserWithdraw] = useState([]);
   const [selected, setSelected] = useState();
   const [popup, setPopup] = useState(false);
 
   const MAINNET_ID = 80001;
-  const contractAddress = "0xd36A6E3Bf0095d9cad79daF2fF681c6Ca7e48Bc9";
+  const contractAddress = "0x6E19Ddbf2fc2fAafD702BdF727E56DfaC1658d9b";
 
   const initContract = async (
     contractAbi,
@@ -62,6 +67,7 @@ export default function Home() {
         .then((res) => {
           const wallet = res.length > 0 && String(res[0]);
           wallet && setWallet(wallet);
+          withdrawData(wallet);
           // setContext({ ...context, wallet });
         })
         .catch((err) => {
@@ -82,11 +88,16 @@ export default function Home() {
     setContractBalance(newBalance);
   };
 
+  const getOwner = async () => {
+    const { web3, contract } = await initContract(ContractABI, contractAddress);
+    const get_Owner = await contract.methods.owner().call();
+    setOwner(get_Owner);
+  };
+
   const ownerFees = async () => {
     const { web3, contract } = await initContract(ContractABI, contractAddress);
     const owner_fees = await contract.methods.ownerFee().call();
     const strtonum = Number(owner_fees);
-    console.log(strtonum)
     setOwnerFee(strtonum);
   };
 
@@ -100,10 +111,10 @@ export default function Home() {
     const { web3, contract } = await initContract(ContractABI, contractAddress);
     const stringtobyte = web3.utils.asciiToHex(value.pass1).padEnd(66, "0");
     const stringtobyte1 = web3.utils.asciiToHex(value.pass2).padEnd(66, "0");
+    const Weitoeth = web3.utils.toWei(value.amount, "ether");
     const sendAmount = await contract.methods
       .createLockBox(value.reciever, stringtobyte, stringtobyte1)
-      .send({ from: wallet, value: value.amount });
-    console.log(sendAmount);
+      .send({ from: wallet, value: Weitoeth });
   };
 
   const claimFunds = async (index, receiver) => {
@@ -117,7 +128,6 @@ export default function Home() {
       const sendAmount = await contract.methods
         .claimFunds(stringtobyte, stringtobyte1, lockboxkey)
         .send({ from: wallet });
-      console.log(sendAmount);
     }
   };
 
@@ -127,11 +137,9 @@ export default function Home() {
       const lockboxkey = await contract.methods
         .getLockBoxKeyAtIndex(Number(index))
         .call();
-      console.log(lockboxkey);
       const reclaimAmount = await contract.methods
         .reclaimFunds(lockboxkey)
         .send({ from: wallet });
-      console.log(reclaimAmount);
     }
   };
 
@@ -147,7 +155,10 @@ export default function Home() {
         .getLockBox(lockboxkey)
         .call()
         .catch(() => {});
-      let arr = [...userDetails, data];
+      let arr = [...userDetails, data].map((i) => ({
+        ...i,
+        creationDate: unixToDate(new Date(Number(i.creationTime)).getTime()),
+      }));
       setUserDetails(
         arr.filter((obj, index) => {
           return (
@@ -167,8 +178,31 @@ export default function Home() {
     const checkBalance = await contract.methods.getBalance(wallet).call();
     const withdrawAmount = await contract.methods
       .withdraw(Number(checkBalance))
-      .send({ from: wallet, value:10 });
-    console.log(withdrawAmount);
+      .send({ from: wallet });
+  };
+
+  const withdrawData = async (wallet) => {
+    const { web3, contract } = await initContract(ContractABI, contractAddress);
+    const checkBalance = await contract.methods.getBalance(wallet).call();
+    setUserWithdraw((pre) => [...pre, Number(checkBalance)]);
+  };
+
+  const withdrawfees = async () => {
+    const { web3, contract } = await initContract(ContractABI, contractAddress);
+    if (owner.toLowerCase()) {
+      const totalBalance = await contract.methods
+        .getCollectedFeeAmount()
+        .call({ from: wallet });
+      if (totalBalance > 0) {
+        const withdraw = await contract.methods
+          .withdrawFees()
+          .send({ from: wallet });
+      } else {
+        return "Insufficent Funds";
+      }
+    } else {
+      return "Only Admin can Access";
+    }
   };
 
   const toggle = async () => {
@@ -184,15 +218,37 @@ export default function Home() {
     }
   };
 
+  const deadline_ = async () => {
+    const { web3, contract } = await initContract(ContractABI, contractAddress);
+    const checkDeadline = await contract.methods.deadline().call();
+    const checkDeadlineLimit = await contract.methods.deadlineLimit().call();
+    setDeadline({
+      dead_line: Number(checkDeadline),
+      deadline_Limit: Number(checkDeadlineLimit),
+    });
+  };
+
+  function unixToDate(date) {
+    var time = new Date((date + deadline.dead_line) * 1000),
+      month = time.getMonth() + 1,
+      day = time.getDate(),
+      year = time.getFullYear(),
+      res = year + "/" + month + "/" + day;
+
+    return res;
+  }
+
   useEffect(() => {
     contract_Balance();
     ownerFees();
     status();
+    getOwner();
+    deadline_();
     //eslint-disable-next-line
   }, []);
 
   useEffect(() => {
-    if (interval) {
+    if (interval&&deadline.dead_line) {
       const newInterval = setInterval(() => {
         userData();
       }, 300);
@@ -201,7 +257,7 @@ export default function Home() {
       };
     }
     //eslint-disable-next-line
-  }, [interval]);
+  }, [interval,deadline]);
 
   return (
     <>
@@ -225,7 +281,10 @@ export default function Home() {
             >
               Reactivate Contract
             </button>
-            <button className="bg-[#f0ad4e] py-[6px] px-[12px] rounded-[4px] text-[#FFFFFF] text-[14px]">
+            <button
+              className="bg-[#f0ad4e] py-[6px] px-[12px] rounded-[4px] text-[#FFFFFF] text-[14px]"
+              onClick={withdrawfees}
+            >
               Recover Funds
             </button>
           </div>
@@ -353,8 +412,8 @@ export default function Home() {
         </div>
 
         {/* creater table */}
-        <div>
-          <table className="table">
+        <div className="w-full mt-5">
+          <table className="table w-full">
             <thead>
               <tr>
                 <th>Creator</th>
@@ -368,7 +427,7 @@ export default function Home() {
             </thead>
             <tbody>
               {userDetails.map((item, idx) => (
-                <tr key={idx}>
+                <tr key={idx} className="text-center">
                   <td>
                     <h4>
                       {`${item.creator.slice(0, 8)}...${String(
@@ -386,83 +445,100 @@ export default function Home() {
                     </h4>
                   </td>
                   <td>{Number(item.amount)}</td>
-                  <td>{`${item.active}`}</td>
+                  <td>{item.creationDate}</td>
+                  {/* {new Date(1687527539)} */}
                   <td>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setSelected(item);
-                        setPopup(true);
-                      }}
-                    >
-                      Claim
-                    </button>
-                    <button
-                      onClick={() => reclaimFunds(item.index, item.creator)}
-                    >
-                      Sender reclaim
-                    </button>
+                    {wallet.toLowerCase() === item.receiver.toLowerCase() && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelected(item);
+                          setPopup(true);
+                        }}
+                      >
+                        Claim
+                      </button>
+                    )}
+                    {wallet.toLowerCase() === item.creator.toLowerCase() &&
+                      item.amount && (
+                        <button
+                          onClick={() => reclaimFunds(item.index, item.creator)}
+                        >
+                          Sender reclaim
+                        </button>
+                      )}
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
-
         </div>
-          {/* popup */}
-          {popup && (
-            <div className="flex w-screen justify-center absolute top-20">
-              <div className="flex flex-col bg-[#ddd] rounded-[20px] gap-y-2 min-w-[400px] p-5 ">
-                <div className="flex justify-between">
-                  <p>Claim Lockbox Funds</p>
-                  <RxCross2 onClick={() => {setSelected(undefined); setPopup(false)}} />
-                </div>
-                <div className="flex gap-x-2 items-center">
-                  <p>ETH</p>
-                  <p>{selected ? Number(selected.amount) : "0"}</p>
-                </div>
-                <div className="flex gap-x-2 items-center">
-                  <CgProfile />
-                  <p>Sender</p>
-                  <p>{selected ? selected.creator : "Sender Address"}</p>
-                </div>
-                <div className="flex gap-x-2 items-center">
-                  <CgProfile />
-                  <p>Receiver</p>
-                  <p>{selected ? selected.receiver : "Receiver Address"}</p>
-                </div>
-                <div className="flex gap-x-2 items-center">
-                  <FaLock />
-                  <input
-                    placeholder="Password 1"
-                    type="password"
-                    value={value1.pass1}
-                    onChange={(event) =>
-                      setValue1({ ...value1, pass1: event.target.value })
-                    }
-                  />
-                </div>
-                <div className="flex gap-x-2 items-center">
-                  <FaLock />
-                  <input
-                    placeholder="Password 2"
-                    type="password"
-                    value={value1.pass2}
-                    onChange={(event) =>
-                      setValue1({ ...value1, pass2: event.target.value })
-                    }
-                  />
-                </div>
-                <div className="flex justify-end">
-                  <button onClick={() => {claimFunds(selected.index, selected.receiver); setPopup(false)}}>Go</button>
-                </div>
+        {/* popup */}
+        {popup && (
+          <div className="flex w-screen justify-center absolute top-20">
+            <div className="flex flex-col bg-[#ddd] rounded-[20px] gap-y-2 min-w-[400px] p-5 ">
+              <div className="flex justify-between">
+                <p>Claim Lockbox Funds</p>
+                <RxCross2
+                  onClick={() => {
+                    setSelected(undefined);
+                    setPopup(false);
+                  }}
+                />
+              </div>
+              <div className="flex gap-x-2 items-center">
+                <p>ETH</p>
+                <p>{selected ? Number(selected.amount) : "0"}</p>
+              </div>
+              <div className="flex gap-x-2 items-center">
+                <CgProfile />
+                <p>Sender</p>
+                <p>{selected ? selected.creator : "Sender Address"}</p>
+              </div>
+              <div className="flex gap-x-2 items-center">
+                <CgProfile />
+                <p>Receiver</p>
+                <p>{selected ? selected.receiver : "Receiver Address"}</p>
+              </div>
+              <div className="flex gap-x-2 items-center">
+                <FaLock />
+                <input
+                  placeholder="Password 1"
+                  type="password"
+                  value={value1.pass1}
+                  onChange={(event) =>
+                    setValue1({ ...value1, pass1: event.target.value })
+                  }
+                />
+              </div>
+              <div className="flex gap-x-2 items-center">
+                <FaLock />
+                <input
+                  placeholder="Password 2"
+                  type="password"
+                  value={value1.pass2}
+                  onChange={(event) =>
+                    setValue1({ ...value1, pass2: event.target.value })
+                  }
+                />
+              </div>
+              <div className="flex justify-end">
+                <button
+                  onClick={() => {
+                    claimFunds(selected.index, selected.receiver);
+                    setPopup(false);
+                  }}
+                >
+                  Go
+                </button>
               </div>
             </div>
-          )}
+          </div>
+        )}
 
         {/* widthdraw table */}
-        <div className="row">
-          <table className="table table-condensed table-hover">
+        <div className="w-full mt-5 mb-5">
+          <table className="table w-full">
             <thead>
               <tr>
                 <th>Address</th>
@@ -476,18 +552,23 @@ export default function Home() {
               </tr>
             </thead>
             <tbody>
-              <tr>
-                <td>
-                  <h4>
-                    <span></span>
-                  </h4>
-                </td>
-                <td></td>
-                <td></td>
-                <td>
-                  <button type="button" onClick={withdraw}>Withdraw</button>
-                </td>
-              </tr>
+              {userWithdraw?.map((item, idx) => (
+                <tr key={idx} className="text-center">
+                  <td>
+                    <h4>
+                      {userDetails[idx].creator.slice(0, 8)}...
+                      {String(userDetails[idx].creator).slice(-5)}
+                    </h4>
+                  </td>
+                  <td>{`${contractBalance}`}</td>
+                  <td>{`${item}`}</td>
+                  <td>
+                    <button type="button" onClick={withdraw}>
+                      Withdraw
+                    </button>
+                  </td>
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>

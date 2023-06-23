@@ -3,8 +3,7 @@ import Web3 from "web3";
 const getUserWalletAddresses = async () => {
   try {
     await window.ethereum.request({ method: "eth_requestAccounts" });
-  } catch (accountError) {
-  }
+  } catch (accountError) {}
 };
 
 export const getWeb3Instance = async (networkId) => {
@@ -29,7 +28,31 @@ export const getWeb3Instance = async (networkId) => {
         params: [{ chainId: `0x${networkId.toString(16)}` }],
       });
     } catch (switchError) {
-
+      {
+        // This error code indicates that the chain has not been added to MetaMask.
+        if (switchError.code === 4902) {
+          try {
+            await ethereum.request({
+              method: "wallet_addEthereumChain",
+              params: [
+                {
+                  chainId: `0x${networkId.toString(16)}`,
+                  chainName: "Mumbai",
+                  nativeCurrency:{
+                    name:'Mumbai',
+                    symbol:'MATIC',
+                    decimals:18
+                  },
+                  rpcUrls: ["https://rpc-mumbai.maticvigil.com/"] /* ... */,
+                },
+              ],
+            });
+          } catch (addError) {
+            // handle "add" error
+          }
+        }
+        // handle other "switch" errors
+      }
     }
   }
 
