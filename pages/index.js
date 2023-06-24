@@ -10,6 +10,9 @@ import { RxCross2 } from "react-icons/rx";
 import Web3 from "web3";
 import ContractABI from "../contract/ContractABI.json";
 import Logo from "../public/images/logo.jpg";
+import { FiSettings } from "react-icons/fi";
+import { FaMoneyBillAlt } from "react-icons/fa";
+import { BiTimer } from "react-icons/bi";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -37,11 +40,17 @@ export default function Home() {
     pass1: "",
     pass2: "",
   });
+  const [value2, setValue2] = useState({
+    address: "",
+    ownerfee: 0,
+    _deadline: 0,
+  });
 
   const [userDetails, setUserDetails] = useState([]);
   const [userWithdraw, setUserWithdraw] = useState([]);
   const [selected, setSelected] = useState();
   const [popup, setPopup] = useState(false);
+  const [settting, setSetting] = useState(false);
 
   const MAINNET_ID = 80001;
   const contractAddress = "0x6E19Ddbf2fc2fAafD702BdF727E56DfaC1658d9b";
@@ -228,6 +237,31 @@ export default function Home() {
     });
   };
 
+  const setNewOwner = async () => {
+    const { web3, contract } = await initContract(ContractABI, contractAddress);
+    const new_owner = await contract.methods
+      .setOwner(value2.address)
+      .send({ from: wallet });
+    setOwner(new_owner);
+  };
+
+  const set_OwnerFee = async () => {
+    const { web3, contract } = await initContract(ContractABI, contractAddress);
+    const _ownerfee = await contract.methods
+      .setOwnerFee(value2.ownerfee)
+      .send({ from: wallet });
+    setOwnerFee(value2.ownerfee);
+  };
+
+  const set_deadline = async () => {
+    const { web3, contract } = await initContract(ContractABI, contractAddress);
+    const convert = value2._deadline * 86400;
+    const set_dead_line = await contract.methods
+      .setDeadline(convert)
+      .send({ from: wallet });
+    setDeadline({ dead_line: value2._deadline });
+  };
+
   function unixToDate(date) {
     var time = new Date((date + deadline.dead_line) * 1000),
       month = time.getMonth() + 1,
@@ -248,7 +282,7 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    if (interval&&deadline.dead_line) {
+    if (interval && deadline.dead_line) {
       const newInterval = setInterval(() => {
         userData();
       }, 300);
@@ -257,7 +291,7 @@ export default function Home() {
       };
     }
     //eslint-disable-next-line
-  }, [interval,deadline]);
+  }, [interval, deadline]);
 
   return (
     <>
@@ -269,18 +303,21 @@ export default function Home() {
             <p className="text-[#FFFFFF]">Easy Swift</p>
           </div>
           <div className="flex gap-x-1">
-            <button
-              className="bg-[#d9534f] py-[6px] px-[12px] rounded-[4px] text-[#FFFFFF] text-[14px]"
-              onClick={toggle}
-            >
-              Emergency Contract Stop
-            </button>
-            <button
-              className="bg-[#5cb85c] py-[6px] px-[12px] rounded-[4px] text-[#FFFFFF] text-[14px]"
-              onClick={toggle}
-            >
-              Reactivate Contract
-            </button>
+            {contractStatus === false ? (
+              <button
+                className="bg-[#d9534f] py-[6px] px-[12px] rounded-[4px] text-[#FFFFFF] text-[14px]"
+                onClick={toggle}
+              >
+                Emergency Contract Stop
+              </button>
+            ) : (
+              <button
+                className="bg-[#5cb85c] py-[6px] px-[12px] rounded-[4px] text-[#FFFFFF] text-[14px]"
+                onClick={toggle}
+              >
+                Reactivate Contract
+              </button>
+            )}
             <button
               className="bg-[#f0ad4e] py-[6px] px-[12px] rounded-[4px] text-[#FFFFFF] text-[14px]"
               onClick={withdrawfees}
@@ -288,14 +325,31 @@ export default function Home() {
               Recover Funds
             </button>
           </div>
-          <div>
-            {wallet === "" ? (
-              <button className="text-[#FFFFFF]" onClick={getWallet}>
-                Connect Wallet
-              </button>
-            ) : (
-              <p className="text-[#FFFFFF]">Connected</p>
-            )}
+          <div className="flex items-center gap-x-2">
+            <div>
+              {wallet === "" ? (
+                <button className="text-[#FFFFFF]" onClick={getWallet}>
+                  Connect Wallet
+                </button>
+              ) : (
+                <p className="text-[#FFFFFF]">Connected</p>
+              )}
+            </div>
+            <div
+              className={`cursor-pointer 
+              
+                // !wallet.toLowerCase()
+                //   ? "hidden"
+                //   : wallet.toLowerCase() === owner.toLowerCase()
+                //   ? "flex"
+                //   : "hidden"
+                // (wallet === "" && 'hidden') || (wallet.toLowerCase() === owner.toLowerCase() && 'flex')
+              
+            `}
+              onClick={() => setSetting(true)}
+            >
+              <FiSettings color="#fff" />
+            </div>
           </div>
         </div>
 
@@ -531,6 +585,90 @@ export default function Home() {
                 >
                   Go
                 </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* setting popup */}
+        {settting && (
+          <div className="flex w-screen justify-center absolute top-20">
+            <div className="flex flex-col bg-[#ddd] rounded-[20px] gap-y-2 min-w-[400px] p-5 ">
+              <div className="flex justify-between">
+                <p>Setting</p>
+                <RxCross2
+                  className="cursor-pointer"
+                  onClick={() => {
+                    setSetting(false);
+                  }}
+                />
+              </div>
+              <div>
+                <p>Set New Owner</p>
+                <p>Current Owner: {wallet.toLowerCase()}</p>
+                <div className="flex gap-x-2 items-center">
+                  <CgProfile />
+                  <input
+                    placeholder="new owner"
+                    // value={value2.address}
+                    onChange={(event) =>
+                      setValue2({ ...value2, address: event.target.value })
+                    }
+                  />
+                  <button
+                    onClick={() => {
+                      setNewOwner();
+                      setSetting(false);
+                    }}
+                  >
+                    Submit
+                  </button>
+                </div>
+              </div>
+              <div>
+                <p>Set Owner Fee</p>
+                <p>Current Owner Fee: {ownerFee} (Wei)</p>
+                <div className="flex gap-x-2 items-center">
+                  <FaMoneyBillAlt />
+                  <input
+                    placeholder="owner fee"
+                    // value={value2.ownerfee}
+                    onChange={(event) =>
+                      setValue2({ ...value2, ownerfee: event.target.value })
+                    }
+                  />
+                  <button
+                    onClick={() => {
+                      set_OwnerFee();
+                      setSetting(false);
+                    }}
+                  >
+                    Submit
+                  </button>
+                </div>
+              </div>
+              <div>
+                <p>Set New Deadline</p>
+                <p>Current Deadline: {deadline.dead_line / 86400} Days</p>
+                <div className="flex gap-x-2 items-center">
+                  <BiTimer />
+                  <input
+                    placeholder="new deadline"
+                    type="number"
+                    // value={value2.deadline_}
+                    onChange={(event) =>
+                      setValue2({ ...value2, _deadline: event.target.value })
+                    }
+                  />
+                  <button
+                    onClick={() => {
+                      set_deadline();
+                      setSetting(false);
+                    }}
+                  >
+                    Submit
+                  </button>
+                </div>
               </div>
             </div>
           </div>
