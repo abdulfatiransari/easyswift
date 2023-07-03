@@ -372,11 +372,12 @@ export default function LandingPage() {
             <div>
               {user ? (
                 <>
-                <div className="flex gap-x-2">
-                <p className="text-white">{user.displayName || ""}</p> {console.log(user.displayName)}
-                  <button className="text-[#fff]" onClick={signout}>
-                    Signout
-                  </button>
+                  <div className="flex gap-x-2">
+                    <p className="text-white">{user.displayName || ""}</p>{" "}
+                    {console.log(user.displayName)}
+                    <button className="text-[#fff]" onClick={signout}>
+                      Signout
+                    </button>
                   </div>
                 </>
               ) : (

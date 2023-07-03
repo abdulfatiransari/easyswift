@@ -6,7 +6,7 @@ import { useRouter } from "next/router";
 import React, { useContext, useState } from "react";
 
 export default function SignIn() {
-    const {user,setUser} = useContext(Context);
+  const { user, setUser } = useContext(Context);
   const [formValues, setFormValues] = useState({
     name: "",
     email: "",

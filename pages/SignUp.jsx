@@ -21,7 +21,7 @@ export default function SignUp() {
           console.log(user);
           await fetch("/api/addUser", {
             method: "POST",
-            body: JSON.stringify({...user,displayName:formValues.name}),
+            body: JSON.stringify({ ...user, displayName: formValues.name }),
           });
           router.push("/SignIn");
           // ...
