@@ -1,8 +1,9 @@
+import { Context } from "@/components/Context";
 import { auth } from "@/utils/firebase";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import Link from "next/link";
 import { useRouter } from "next/router";
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 
 export default function SignUp() {
   const [formValues, setFormValues] = useState({
@@ -11,6 +12,7 @@ export default function SignUp() {
     pass1: "",
     pass2: "",
   });
+  const { user, setUser,setUsers } = useContext(Context);
   const router = useRouter();
   const signup = () => {
     if (formValues.pass1 === formValues.pass2) {
@@ -18,12 +20,13 @@ export default function SignUp() {
         .then(async (userCredential) => {
           // Signed in
           const user = userCredential.user;
-          console.log(user);
           await fetch("/api/addUser", {
             method: "POST",
             body: JSON.stringify({ ...user, displayName: formValues.name }),
           });
-          router.push("/SignIn?refresh=1");
+          setUsers(pre=>([...pre,{...user,displayName:formValues.name}]))
+          setUser(user)
+          // router.push("/SignIn?refresh=1");
           // ...
         })
         .catch((error) => {

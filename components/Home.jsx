@@ -208,7 +208,6 @@ export default function LandingPage() {
       const toggle = await contract.methods
         .toggleContractActive()
         .send({ from: wallet });
-      console.log("success");
     } else {
       return "Only owner access";
     }
@@ -285,7 +284,6 @@ export default function LandingPage() {
     const auth = getAuth();
     signOut(auth)
       .then(() => {
-        console.log("signout success");
         setUser("");
         // Sign-out successful.
       })
@@ -356,7 +354,6 @@ export default function LandingPage() {
                 <>
                   <div className="flex gap-x-2">
                     <p className="text-white">{user.displayName || ""}</p>{" "}
-                    {console.log(user.displayName)}
                     <button className="text-[#fff]" onClick={() => signout()}>
                       Signout
                     </button>

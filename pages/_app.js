@@ -41,6 +41,7 @@ export default function App({ Component, pageProps }) {
   }, []);
 
   useEffect(() => {
+    console.log(user)
     if (!user) {
       setAuthorized(false);
       router.push("/SignIn");
@@ -63,7 +64,7 @@ export default function App({ Component, pageProps }) {
   }, [authorized, users]);
 if(!web3) return;
   return (
-    <Context.Provider value={{ user, setUser }}>
+    <Context.Provider value={{ user, setUser, setUsers }}>
       <WEB3_Contract.Provider value={{ web3Obj:web3,contractAddress }}>
         <Component {...pageProps} />
       </WEB3_Contract.Provider>
