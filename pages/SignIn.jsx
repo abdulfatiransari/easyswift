@@ -20,7 +20,7 @@ export default function SignIn() {
         // Signed in
         const user = userCredential.user;
         setUser(user);
-        router.push("/");
+        // router.push("/");
         // ...
       })
       .catch((error) => {

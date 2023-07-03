@@ -24,7 +24,7 @@ export default function App({ Component, pageProps }) {
   useEffect(() => {
     if (!user) {
       setAuthorized(false);
-      router.replace("/SignIn");
+      router.push("/SignIn");
     } else {
       setAuthorized(true);
     }
@@ -38,6 +38,7 @@ export default function App({ Component, pageProps }) {
           return i.uid === user.uid;
         })[0]
       );
+      router.push('/');
     }
     //eslint-disable-next-line
   }, [authorized, users]);
