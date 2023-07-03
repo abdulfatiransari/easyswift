@@ -23,7 +23,7 @@ export default function SignUp() {
             method: "POST",
             body: JSON.stringify({ ...user, displayName: formValues.name }),
           });
-          router.push("/SignIn");
+          router.push("/SignIn?refresh=1");
           // ...
         })
         .catch((error) => {

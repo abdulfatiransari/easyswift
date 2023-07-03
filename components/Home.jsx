@@ -1,5 +1,4 @@
 "use client";
-import { getWeb3Instance } from "@/contract/Web3Instance";
 import { Inter } from "next/font/google";
 import Image from "next/image";
 import { useContext, useEffect, useState } from "react";
@@ -13,7 +12,7 @@ import ContractABI from "../contract/ContractABI.json";
 import Logo from "../public/images/logo.jpg";
 import { getAuth, signOut } from "firebase/auth";
 import Link from "next/link";
-import { Context } from "./Context";
+import { Context, WEB3_Contract } from "./Context";
 import { useRouter } from "next/router";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -49,29 +48,12 @@ export default function LandingPage() {
     _deadline: 0,
   });
 
+  const { web3Obj,contractAddress } = useContext(WEB3_Contract);
   const [userDetails, setUserDetails] = useState([]);
   const [userWithdraw, setUserWithdraw] = useState([]);
   const [selected, setSelected] = useState();
   const [popup, setPopup] = useState(false);
   const [settting, setSetting] = useState(false);
-  const [username, setUsername] = useState();
-
-  const MAINNET_ID = 80001;
-  const contractAddress = "0x6E19Ddbf2fc2fAafD702BdF727E56DfaC1658d9b";
-
-  const initContract = async (
-    contractAbi,
-    contractAddress,
-    networkId = MAINNET_ID
-  ) => {
-    try {
-      const web3 = await getWeb3Instance(networkId);
-      const contract = new web3.eth.Contract(contractAbi, contractAddress);
-      return { web3, contract };
-    } catch (error) {
-      console.log(error);
-    }
-  };
 
   const getWallet = () => {
     if (typeof window !== "undefined" && window.ethereum) {
@@ -95,20 +77,20 @@ export default function LandingPage() {
   };
 
   const contract_Balance = async () => {
-    const { web3, contract } = await initContract(ContractABI, contractAddress);
+    const { web3 } = web3Obj;
     const balance = await web3.eth.getBalance(contractAddress);
     const newBalance = Web3.utils.fromWei(Number(balance), "ether");
     setContractBalance(newBalance);
   };
 
   const getOwner = async () => {
-    const { web3, contract } = await initContract(ContractABI, contractAddress);
+    const { contract } = web3Obj;
     const get_Owner = await contract.methods.owner().call();
     setOwner(get_Owner);
   };
 
   const ownerFees = async () => {
-    const { web3, contract } = await initContract(ContractABI, contractAddress);
+    const { web3, contract } = web3Obj;
     const owner_fees = await contract.methods.ownerFee().call();
     const strtonum = Number(owner_fees);
     const weitoeth = web3.utils.fromWei(strtonum, "ether");
@@ -116,13 +98,13 @@ export default function LandingPage() {
   };
 
   const status = async () => {
-    const { web3, contract } = await initContract(ContractABI, contractAddress);
+    const { contract } = web3Obj;
     const status = await contract.methods.stopped().call();
     setContractStatus(status);
   };
 
   const createLockBox = async () => {
-    const { web3, contract } = await initContract(ContractABI, contractAddress);
+    const { web3, contract } = web3Obj;
     const stringtobyte = web3.utils.asciiToHex(value.pass1).padEnd(66, "0");
     const stringtobyte1 = web3.utils.asciiToHex(value.pass2).padEnd(66, "0");
     const Weitoeth = web3.utils.toWei(value.amount, "ether");
@@ -132,7 +114,7 @@ export default function LandingPage() {
   };
 
   const claimFunds = async (index, receiver) => {
-    const { web3, contract } = await initContract(ContractABI, contractAddress);
+    const { web3, contract } = web3Obj;
     if (wallet.toLowerCase() === receiver.toLowerCase()) {
       const stringtobyte = web3.utils.asciiToHex(value1.pass1).padEnd(66, "0");
       const stringtobyte1 = web3.utils.asciiToHex(value1.pass2).padEnd(66, "0");
@@ -146,7 +128,7 @@ export default function LandingPage() {
   };
 
   const reclaimFunds = async (index, creator) => {
-    const { web3, contract } = await initContract(ContractABI, contractAddress);
+    const { contract } = web3Obj;
     if (wallet.toLowerCase() === creator.toLowerCase()) {
       const lockboxkey = await contract.methods
         .getLockBoxKeyAtIndex(Number(index))
@@ -159,7 +141,7 @@ export default function LandingPage() {
 
   const userData = async () => {
     setInterval2(false);
-    const { web3, contract } = await initContract(ContractABI, contractAddress);
+    const { contract } = web3Obj;
     try {
       const lockboxkey = await contract.methods
         .getLockBoxKeyAtIndex(count)
@@ -188,7 +170,7 @@ export default function LandingPage() {
   };
 
   const withdraw = async () => {
-    const { web3, contract } = await initContract(ContractABI, contractAddress);
+    const { contract } = web3Obj;
     const checkBalance = await contract.methods.getBalance(wallet).call();
     const withdrawAmount = await contract.methods
       .withdraw(Number(checkBalance))
@@ -196,13 +178,13 @@ export default function LandingPage() {
   };
 
   const withdrawData = async (wallet) => {
-    const { web3, contract } = await initContract(ContractABI, contractAddress);
+    const { contract } = web3Obj;
     const checkBalance = await contract.methods.getBalance(wallet).call();
     setUserWithdraw((pre) => [...pre, Number(checkBalance)]);
   };
 
   const withdrawfees = async () => {
-    const { web3, contract } = await initContract(ContractABI, contractAddress);
+    const { contract } = web3Obj;
     if (owner.toLowerCase()) {
       const totalBalance = await contract.methods
         .getCollectedFeeAmount()
@@ -220,7 +202,7 @@ export default function LandingPage() {
   };
 
   const toggle = async () => {
-    const { web3, contract } = await initContract(ContractABI, contractAddress);
+    const { contract } = web3Obj;
     const owner = await contract.methods.owner().call();
     if (wallet.toLowerCase() === owner.toLowerCase()) {
       const toggle = await contract.methods
@@ -233,7 +215,7 @@ export default function LandingPage() {
   };
 
   const deadline_ = async () => {
-    const { web3, contract } = await initContract(ContractABI, contractAddress);
+    const { contract } = web3Obj;
     const checkDeadline = await contract.methods.deadline().call();
     const checkDeadlineLimit = await contract.methods.deadlineLimit().call();
     setDeadline({
@@ -243,7 +225,7 @@ export default function LandingPage() {
   };
 
   const setNewOwner = async () => {
-    const { web3, contract } = await initContract(ContractABI, contractAddress);
+    const { contract } = web3Obj;
     const new_owner = await contract.methods
       .setOwner(value2.address)
       .send({ from: wallet });
@@ -251,7 +233,7 @@ export default function LandingPage() {
   };
 
   const set_OwnerFee = async () => {
-    const { web3, contract } = await initContract(ContractABI, contractAddress);
+    const { web3, contract } = web3Obj;
     const weitoeth = web3.utils.toWei(value2.ownerfee, "wei");
     const _ownerfee = await contract.methods
       .setOwnerFee(weitoeth)
@@ -260,7 +242,7 @@ export default function LandingPage() {
   };
 
   const set_deadline = async () => {
-    const { web3, contract } = await initContract(ContractABI, contractAddress);
+    const { contract } = web3Obj;
     const convert = value2._deadline * 86400;
     const set_dead_line = await contract.methods
       .setDeadline(convert)
@@ -375,7 +357,7 @@ export default function LandingPage() {
                   <div className="flex gap-x-2">
                     <p className="text-white">{user.displayName || ""}</p>{" "}
                     {console.log(user.displayName)}
-                    <button className="text-[#fff]" onClick={signout}>
+                    <button className="text-[#fff]" onClick={() => signout()}>
                       Signout
                     </button>
                   </div>

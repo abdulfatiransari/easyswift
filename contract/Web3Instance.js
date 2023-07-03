@@ -43,7 +43,7 @@ export const getWeb3Instance = async (networkId) => {
                     symbol:'MATIC',
                     decimals:18
                   },
-                  rpcUrls: ["https://rpc-mumbai.maticvigil.com/"] /* ... */,
+                  rpcUrls: ["https://matic-mumbai.chainstacklabs.com"],
                 },
               ],
             });

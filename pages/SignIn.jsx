@@ -3,7 +3,7 @@ import { auth } from "@/utils/firebase";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import Link from "next/link";
 import { useRouter } from "next/router";
-import React, { useContext, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 
 export default function SignIn() {
   const { user, setUser } = useContext(Context);
@@ -20,15 +20,20 @@ export default function SignIn() {
         // Signed in
         const user = userCredential.user;
         setUser(user);
-        // router.push("/");
-        // ...
+        if (router.query.refresh) {
+          window.location.reload();
+        } else {
+          router.push("/");
+        }
+        console.log("success");
       })
       .catch((error) => {
         const errorCode = error.code;
         const errorMessage = error.message;
+        console.log("login error");
       });
-    console.log("success");
   };
+
   return (
     <div className="flex justify-center items-center bg-[#D9D9D9] w-screen h-screen">
       <div className="fle flex-col p-2 ">
