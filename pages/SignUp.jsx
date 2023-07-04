@@ -13,7 +13,6 @@ export default function SignUp() {
     pass2: "",
   });
   const { user, setUser,setUsers } = useContext(Context);
-  const router = useRouter();
   const signup = () => {
     if (formValues.pass1 === formValues.pass2) {
       createUserWithEmailAndPassword(auth, formValues.email, formValues.pass1)
@@ -26,7 +25,6 @@ export default function SignUp() {
           });
           setUsers(pre=>([...pre,{...user,displayName:formValues.name}]))
           setUser(user)
-          // router.push("/SignIn?refresh=1");
           // ...
         })
         .catch((error) => {

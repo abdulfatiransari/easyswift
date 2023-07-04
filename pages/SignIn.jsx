@@ -20,11 +20,6 @@ export default function SignIn() {
         // Signed in
         const user = userCredential.user;
         setUser(user);
-        // if (router.query.refresh) {
-        //   window.location.reload();
-        // } else {
-          // router.push("/");
-        // }
       })
       .catch((error) => {
         const errorCode = error.code;

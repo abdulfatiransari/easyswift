@@ -1,6 +1,8 @@
 "use client";
+import { getAuth, signOut } from "firebase/auth";
 import { Inter } from "next/font/google";
 import Image from "next/image";
+import Link from "next/link";
 import { useContext, useEffect, useState } from "react";
 import { BiMoney, BiTimer } from "react-icons/bi";
 import { CgProfile } from "react-icons/cg";
@@ -8,12 +10,8 @@ import { FaLock, FaMoneyBillAlt } from "react-icons/fa";
 import { FiSettings } from "react-icons/fi";
 import { RxCross2 } from "react-icons/rx";
 import Web3 from "web3";
-import ContractABI from "../contract/ContractABI.json";
 import Logo from "../public/images/logo.jpg";
-import { getAuth, signOut } from "firebase/auth";
-import Link from "next/link";
 import { Context, WEB3_Contract } from "./Context";
-import { useRouter } from "next/router";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -48,7 +46,7 @@ export default function LandingPage() {
     _deadline: 0,
   });
 
-  const { web3Obj,contractAddress } = useContext(WEB3_Contract);
+  const { web3Obj, contractAddress } = useContext(WEB3_Contract);
   const [userDetails, setUserDetails] = useState([]);
   const [userWithdraw, setUserWithdraw] = useState([]);
   const [selected, setSelected] = useState();
@@ -77,65 +75,97 @@ export default function LandingPage() {
   };
 
   const contract_Balance = async () => {
-    const { web3 } = web3Obj;
-    const balance = await web3.eth.getBalance(contractAddress);
-    const newBalance = Web3.utils.fromWei(Number(balance), "ether");
-    setContractBalance(newBalance);
+    try {
+      const { web3 } = web3Obj;
+      const balance = await web3.eth.getBalance(contractAddress);
+      const newBalance = Web3.utils.fromWei(Number(balance), "ether");
+      setContractBalance(newBalance);
+    } catch (error) {
+      console.log(error);
+    }
   };
 
   const getOwner = async () => {
-    const { contract } = web3Obj;
-    const get_Owner = await contract.methods.owner().call();
-    setOwner(get_Owner);
+    try {
+      const { contract } = web3Obj;
+      const get_Owner = await contract.methods.owner().call();
+      setOwner(get_Owner);
+    } catch (error) {
+      console.log(error);
+    }
   };
 
   const ownerFees = async () => {
-    const { web3, contract } = web3Obj;
-    const owner_fees = await contract.methods.ownerFee().call();
-    const strtonum = Number(owner_fees);
-    const weitoeth = web3.utils.fromWei(strtonum, "ether");
-    setOwnerFee(weitoeth);
+    try {
+      const { web3, contract } = web3Obj;
+      const owner_fees = await contract.methods.ownerFee().call();
+      const strtonum = Number(owner_fees);
+      const weitoeth = web3.utils.fromWei(strtonum, "ether");
+      setOwnerFee(weitoeth);
+    } catch (error) {
+      console.log(error);
+    }
   };
 
   const status = async () => {
-    const { contract } = web3Obj;
-    const status = await contract.methods.stopped().call();
-    setContractStatus(status);
+    try {
+      const { contract } = web3Obj;
+      const status = await contract.methods.stopped().call();
+      setContractStatus(status);
+    } catch (error) {
+      console.log(error);
+    }
   };
 
   const createLockBox = async () => {
-    const { web3, contract } = web3Obj;
-    const stringtobyte = web3.utils.asciiToHex(value.pass1).padEnd(66, "0");
-    const stringtobyte1 = web3.utils.asciiToHex(value.pass2).padEnd(66, "0");
-    const Weitoeth = web3.utils.toWei(value.amount, "ether");
-    const sendAmount = await contract.methods
-      .createLockBox(value.reciever, stringtobyte, stringtobyte1)
-      .send({ from: wallet, value: Weitoeth });
+    try {
+      const { web3, contract } = web3Obj;
+      const stringtobyte = web3.utils.asciiToHex(value.pass1).padEnd(66, "0");
+      const stringtobyte1 = web3.utils.asciiToHex(value.pass2).padEnd(66, "0");
+      const Weitoeth = web3.utils.toWei(value.amount, "ether");
+      const sendAmount = await contract.methods
+        .createLockBox(value.reciever, stringtobyte, stringtobyte1)
+        .send({ from: wallet, value: Weitoeth });
+    } catch (error) {
+      console.log(error);
+    }
   };
 
   const claimFunds = async (index, receiver) => {
-    const { web3, contract } = web3Obj;
-    if (wallet.toLowerCase() === receiver.toLowerCase()) {
-      const stringtobyte = web3.utils.asciiToHex(value1.pass1).padEnd(66, "0");
-      const stringtobyte1 = web3.utils.asciiToHex(value1.pass2).padEnd(66, "0");
-      const lockboxkey = await contract.methods
-        .getLockBoxKeyAtIndex(Number(index))
-        .call();
-      const sendAmount = await contract.methods
-        .claimFunds(stringtobyte, stringtobyte1, lockboxkey)
-        .send({ from: wallet });
+    try {
+      const { web3, contract } = web3Obj;
+      if (wallet.toLowerCase() === receiver.toLowerCase()) {
+        const stringtobyte = web3.utils
+          .asciiToHex(value1.pass1)
+          .padEnd(66, "0");
+        const stringtobyte1 = web3.utils
+          .asciiToHex(value1.pass2)
+          .padEnd(66, "0");
+        const lockboxkey = await contract.methods
+          .getLockBoxKeyAtIndex(Number(index))
+          .call();
+        const sendAmount = await contract.methods
+          .claimFunds(stringtobyte, stringtobyte1, lockboxkey)
+          .send({ from: wallet });
+      }
+    } catch (error) {
+      console.log(error);
     }
   };
 
   const reclaimFunds = async (index, creator) => {
-    const { contract } = web3Obj;
-    if (wallet.toLowerCase() === creator.toLowerCase()) {
-      const lockboxkey = await contract.methods
-        .getLockBoxKeyAtIndex(Number(index))
-        .call();
-      const reclaimAmount = await contract.methods
-        .reclaimFunds(lockboxkey)
-        .send({ from: wallet });
+    try {
+      const { contract } = web3Obj;
+      if (wallet.toLowerCase() === creator.toLowerCase()) {
+        const lockboxkey = await contract.methods
+          .getLockBoxKeyAtIndex(Number(index))
+          .call();
+        const reclaimAmount = await contract.methods
+          .reclaimFunds(lockboxkey)
+          .send({ from: wallet });
+      }
+    } catch (error) {
+      console.log(error);
     }
   };
 
@@ -170,83 +200,115 @@ export default function LandingPage() {
   };
 
   const withdraw = async () => {
-    const { contract } = web3Obj;
-    const checkBalance = await contract.methods.getBalance(wallet).call();
-    const withdrawAmount = await contract.methods
-      .withdraw(Number(checkBalance))
-      .send({ from: wallet });
+    try {
+      const { contract } = web3Obj;
+      const checkBalance = await contract.methods.getBalance(wallet).call();
+      const withdrawAmount = await contract.methods
+        .withdraw(Number(checkBalance))
+        .send({ from: wallet });
+    } catch (error) {
+      console.log(error);
+    }
   };
 
   const withdrawData = async (wallet) => {
-    const { contract } = web3Obj;
-    const checkBalance = await contract.methods.getBalance(wallet).call();
-    setUserWithdraw((pre) => [...pre, Number(checkBalance)]);
+    try {
+      const { contract } = web3Obj;
+      const checkBalance = await contract.methods.getBalance(wallet).call();
+      setUserWithdraw((pre) => [...pre, Number(checkBalance)]);
+    } catch (error) {
+      console.log(error);
+    }
   };
 
   const withdrawfees = async () => {
-    const { contract } = web3Obj;
-    if (owner.toLowerCase()) {
-      const totalBalance = await contract.methods
-        .getCollectedFeeAmount()
-        .call({ from: wallet });
-      if (totalBalance > 0) {
-        const withdraw = await contract.methods
-          .withdrawFees()
-          .send({ from: wallet });
+    try {
+      const { contract } = web3Obj;
+      if (owner.toLowerCase()) {
+        const totalBalance = await contract.methods
+          .getCollectedFeeAmount()
+          .call({ from: wallet });
+        if (totalBalance > 0) {
+          const withdraw = await contract.methods
+            .withdrawFees()
+            .send({ from: wallet });
+        } else {
+          return "Insufficent Funds";
+        }
       } else {
-        return "Insufficent Funds";
+        return "Only Admin can Access";
       }
-    } else {
-      return "Only Admin can Access";
+    } catch (error) {
+      console.log(error);
     }
   };
 
   const toggle = async () => {
-    const { contract } = web3Obj;
-    const owner = await contract.methods.owner().call();
-    if (wallet.toLowerCase() === owner.toLowerCase()) {
-      const toggle = await contract.methods
-        .toggleContractActive()
-        .send({ from: wallet });
-    } else {
-      return "Only owner access";
+    try {
+      const { contract } = web3Obj;
+      const owner = await contract.methods.owner().call();
+      if (wallet.toLowerCase() === owner.toLowerCase()) {
+        const toggle = await contract.methods
+          .toggleContractActive()
+          .send({ from: wallet });
+      } else {
+        return "Only owner access";
+      }
+    } catch (error) {
+      console.log(error);
     }
   };
 
   const deadline_ = async () => {
-    const { contract } = web3Obj;
-    const checkDeadline = await contract.methods.deadline().call();
-    const checkDeadlineLimit = await contract.methods.deadlineLimit().call();
-    setDeadline({
-      dead_line: Number(checkDeadline),
-      deadline_Limit: Number(checkDeadlineLimit),
-    });
+    try {
+      const { contract } = web3Obj;
+      const checkDeadline = await contract.methods.deadline().call();
+      const checkDeadlineLimit = await contract.methods.deadlineLimit().call();
+      setDeadline({
+        dead_line: Number(checkDeadline),
+        deadline_Limit: Number(checkDeadlineLimit),
+      });
+    } catch (error) {
+      console.log(error);
+    }
   };
 
   const setNewOwner = async () => {
-    const { contract } = web3Obj;
-    const new_owner = await contract.methods
-      .setOwner(value2.address)
-      .send({ from: wallet });
-    setOwner(new_owner);
+    try {
+      const { contract } = web3Obj;
+      const new_owner = await contract.methods
+        .setOwner(value2.address)
+        .send({ from: wallet });
+      setOwner(new_owner);
+    } catch (error) {
+      console.log(error);
+    }
   };
 
   const set_OwnerFee = async () => {
-    const { web3, contract } = web3Obj;
-    const weitoeth = web3.utils.toWei(value2.ownerfee, "wei");
-    const _ownerfee = await contract.methods
-      .setOwnerFee(weitoeth)
-      .send({ from: wallet });
-    setOwnerFee(weitoeth);
+    try {
+      const { web3, contract } = web3Obj;
+      const weitoeth = web3.utils.toWei(value2.ownerfee, "wei");
+      const _ownerfee = await contract.methods
+        .setOwnerFee(weitoeth)
+        .send({ from: wallet });
+      setOwnerFee(weitoeth);
+    } catch (error) {
+      console.log(error);
+    }
   };
 
   const set_deadline = async () => {
-    const { contract } = web3Obj;
-    const convert = value2._deadline * 86400;
-    const set_dead_line = await contract.methods
-      .setDeadline(convert)
-      .send({ from: wallet });
-    setDeadline({ dead_line: value2._deadline });
+    try {
+      const { contract } = web3Obj;
+      const convert = value2._deadline * 86400;
+      const set_dead_line = await contract.methods
+        .setDeadline(convert)
+        .send({ from: wallet });
+      setDeadline({ dead_line: value2._deadline });
+    } catch (error) {
+      console.log(error);
+    }
   };
 
   function unixToDate(date) {
@@ -409,6 +471,7 @@ export default function LandingPage() {
                 onChange={(event) =>
                   setValue({ ...value, amount: event.target.value })
                 }
+                className="w-full outline-none"
               />
             </div>
           </div>
@@ -419,7 +482,7 @@ export default function LandingPage() {
             <div className="flex border border-[#ccc] px-[16px] py-[10px] w-full">
               <input
                 placeholder="Sender Address"
-                className="w-full"
+                className="w-full outline-none"
                 disabled
                 value={`${wallet}`}
               />
@@ -436,6 +499,7 @@ export default function LandingPage() {
                 onChange={(event) =>
                   setValue({ ...value, reciever: event.target.value })
                 }
+                className="w-full outline-none"
               />
             </div>
           </div>
@@ -451,6 +515,7 @@ export default function LandingPage() {
                 onChange={(event) =>
                   setValue({ ...value, pass1: event.target.value })
                 }
+                className="w-full outline-none"
               />
             </div>
           </div>
@@ -466,6 +531,7 @@ export default function LandingPage() {
                 onChange={(event) =>
                   setValue({ ...value, pass2: event.target.value })
                 }
+                className="w-full outline-none"
               />
             </div>
           </div>
@@ -705,23 +771,25 @@ export default function LandingPage() {
               </tr>
             </thead>
             <tbody>
-              {userWithdraw?.map((item, idx) => (
-                <tr key={idx} className="text-center">
-                  <td>
-                    <h4>
-                      {userDetails[idx].creator.slice(0, 8)}...
-                      {String(userDetails[idx].creator).slice(-5)}
-                    </h4>
-                  </td>
-                  <td>{`${contractBalance}`}</td>
-                  <td>{`${item}`}</td>
-                  <td>
-                    <button type="button" onClick={withdraw}>
-                      Withdraw
-                    </button>
-                  </td>
-                </tr>
-              ))}
+              {userDetails.length &&
+                userWithdraw?.map((item, idx) => (
+                  <tr key={idx} className="text-center">
+                    <td>
+                      <h4>
+                        {console.log(userDetails)}
+                        {userDetails[idx].creator.slice(0, 8)}...
+                        {String(userDetails[idx].creator).slice(-5)}
+                      </h4>
+                    </td>
+                    <td>{`${contractBalance}`}</td>
+                    <td>{`${item}`}</td>
+                    <td>
+                      <button type="button" onClick={withdraw}>
+                        Withdraw
+                      </button>
+                    </td>
+                  </tr>
+                ))}
             </tbody>
           </table>
         </div>
