@@ -387,6 +387,7 @@ export default function LandingPage() {
             </button>
           </div>
           <div className="flex items-center gap-x-2">
+            <div><p className="text-white">{user.displayType || ""}</p></div>
             <div>
               {wallet === "" ? (
                 <button className="text-[#FFFFFF]" onClick={getWallet}>

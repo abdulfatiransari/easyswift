@@ -2,8 +2,7 @@ import { Context } from "@/components/Context";
 import { auth } from "@/utils/firebase";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import Link from "next/link";
-import { useRouter } from "next/router";
-import React, { useContext, useState } from "react";
+import { useContext, useState } from "react";
 
 export default function SignUp() {
   const [formValues, setFormValues] = useState({
@@ -11,8 +10,9 @@ export default function SignUp() {
     email: "",
     pass1: "",
     pass2: "",
+    type: "",
   });
-  const { user, setUser,setUsers } = useContext(Context);
+  const { user, setUser, setUsers } = useContext(Context);
   const signup = () => {
     if (formValues.pass1 === formValues.pass2) {
       createUserWithEmailAndPassword(auth, formValues.email, formValues.pass1)
@@ -21,10 +21,21 @@ export default function SignUp() {
           const user = userCredential.user;
           await fetch("/api/addUser", {
             method: "POST",
-            body: JSON.stringify({ ...user, displayName: formValues.name }),
+            body: JSON.stringify({
+              ...user,
+              displayName: formValues.name,
+              displayType: formValues.type,
+            }),
           });
-          setUsers(pre=>([...pre,{...user,displayName:formValues.name}]))
-          setUser(user)
+          setUsers((pre) => [
+            ...pre,
+            {
+              ...user,
+              displayName: formValues.name,
+              displayType: formValues.type,
+            },
+          ]);
+          setUser(user);
           // ...
         })
         .catch((error) => {
@@ -53,6 +64,7 @@ export default function SignUp() {
           <p>Email</p>
           <input
             placeholder="Enter email"
+            required='required'
             value={formValues.email}
             onChange={(e) =>
               setFormValues((pre) => ({ ...pre, email: e.target.value }))
@@ -63,7 +75,7 @@ export default function SignUp() {
           <p>Password</p>
           <input
             placeholder="Enter password"
-            required
+            required='required'
             minLength={6}
             max={20}
             value={formValues.pass1}
@@ -82,10 +94,37 @@ export default function SignUp() {
             }
           />
         </div>
-        <div>
+
+        <div className="flex gap-x-2 items-center">
+          <input
+            type="radio"
+            id="seller"
+            name="type"
+            value={"Seller"}
+            onChange={(e) =>
+              setFormValues((pre) => ({ ...pre, type: e.target.value }))
+            }
+          ></input>
+          <label for="seller">Seller</label>
+
+          <input
+            type="radio"
+            id="buyer"
+            name="type"
+            value={"Buyer"}
+            onChange={(e) =>
+              setFormValues((pre) => ({ ...pre, type: e.target.value }))
+            }
+          ></input>
+          <label for="buyer">Buyer</label>
+        </div>
+
+        <div className="border px-2 w-fit border-[#000]">
           <button onClick={signup}>Submit</button>
         </div>
-        <Link href={"SignIn"}>Back to SignIn</Link>
+        <Link href={"SignIn"} className="border px-2 w-fit border-[#000] mt-2">
+          Back to SignIn
+        </Link>
       </div>
     </div>
   );

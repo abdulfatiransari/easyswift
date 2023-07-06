@@ -12,6 +12,7 @@ export default function SignIn() {
     email: "",
     pass1: "",
     pass2: "",
+    type:""
   });
   const router = useRouter();
   const signin = () => {
@@ -35,6 +36,7 @@ export default function SignIn() {
           <p>Email</p>
           <input
             placeholder="Enter email"
+            required
             value={formValues.email}
             onChange={(e) =>
               setFormValues((pre) => ({ ...pre, email: e.target.value }))
@@ -45,6 +47,7 @@ export default function SignIn() {
           <p>Password</p>
           <input
             placeholder="Enter password"
+            required
             value={formValues.pass1}
             onChange={(e) =>
               setFormValues((pre) => ({ ...pre, pass1: e.target.value }))
