@@ -175,9 +175,13 @@ export default function LandingPage() {
                 creationDate: unixToDate(new Date(Number(i.creationTime)).getTime()),
             }));
             setUserDetails(
-                arr.filter((obj, index) => {
-                    return index === arr.findIndex((o) => obj.creationTime === o.creationTime);
-                })
+                arr
+                    .filter((obj, index) => {
+                        return index === arr.findIndex((o) => obj.creationTime === o.creationTime);
+                    })
+                    .sort(function (a, b) {
+                        return Number(b.creationTime) - Number(a.creationTime);
+                    })
             );
             setCount((pre) => pre + 1);
             setInterval2(true);
@@ -551,7 +555,7 @@ export default function LandingPage() {
                                         <td>{item.creationDate}</td>
                                         {/* {new Date(1687527539)} */}
                                         <td>
-                                            {wallet.toLowerCase() === item.receiver.toLowerCase() && item.active && (
+                                            {wallet.toLowerCase() === item.receiver.toLowerCase() && !item.active && (
                                                 <button
                                                     type="button"
                                                     onClick={() => {
@@ -737,7 +741,7 @@ export default function LandingPage() {
                                         </td>
                                         <td>{`${contractBalance}`}</td>
                                         <td>
-                                            {!item.active
+                                            {item.active
                                                 ? `${
                                                       userWithdraw[idx]
                                                           ? Web3.utils.fromWei(userWithdraw[idx], "ether")
@@ -746,11 +750,16 @@ export default function LandingPage() {
                                                 : `0`}
                                         </td>
                                         <td>
-                                            {wallet.toLowerCase() === item.receiver.toLowerCase() && !item.active && (
+                                            {wallet.toLowerCase() === item.receiver.toLowerCase() && item.active && (
                                                 <button type="button" onClick={withdraw}>
                                                     Withdraw
                                                 </button>
                                             )}
+                                            {/* {wallet.toLowerCase() === item.receiver.toLowerCase() && !item.active && (
+                                                <button type="button" onClick={withdraw}>
+                                                    Withdraw
+                                                </button>
+                                            )} */}
                                         </td>
                                     </tr>
                                 ))}
